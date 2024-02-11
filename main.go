@@ -16,6 +16,12 @@ func main() {
 			facades.Log().Errorf("Route run error: %v", err)
 		}
 	}()
+	go func() {
+		if err := facades.Grpc().Run(); err != nil {
+			facades.Log().Errorf("Run grpc error: %+v", err)
+		}
+	}()
 
 	select {}
+
 }

@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"goravel/app/http/controllers"
+
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
 	"github.com/goravel/framework/support"
@@ -12,4 +14,8 @@ func Web() {
 			"version": support.Version,
 		})
 	})
+
+	// Websocket
+	websocketController := controllers.NewWebsocketController()
+	facades.Route().Get("/ws", websocketController.Server)
 }

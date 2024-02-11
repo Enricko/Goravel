@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"goravel/app/events"
 	"goravel/app/http/requests"
 	"goravel/app/models"
 
+	"github.com/goravel/framework/contracts/event"
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
 )
@@ -18,8 +20,21 @@ func NewUserController() *UserController {
 	}
 }
 
+func (r *UserController) Event(ctx http.Context) http.Response {
+	err := facades.Event().Job(&events.PodcastProcessed{}, []event.Arg{
+		{Type: "string", Value: "Goravel"},
+		{Type: "int", Value: 1},
+	}).Dispatch()
+	if err != nil {
+		print(err)
+	}
+	return ctx.Response().Success().Json(http.Json{
+		"message": "dispached",
+	})
+}
+
 func (r *UserController) Show(ctx http.Context) http.Response {
-	header := ctx.Request().Header("Authorization","")
+	header := ctx.Request().Header("Authorization", "")
 	payload, err := facades.Auth().Parse(ctx, header)
 	if err != nil {
 		return ctx.Response().Json(http.StatusBadRequest, http.Json{
@@ -33,10 +48,10 @@ func (r *UserController) Show(ctx http.Context) http.Response {
 }
 
 func (r *UserController) Logout(ctx http.Context) http.Response {
-	header := ctx.Request().Header("Authorization","")
+	header := ctx.Request().Header("Authorization", "")
 	payload, err := facades.Auth().Parse(ctx, header)
 	err = facades.Auth().Logout(ctx)
-	
+
 	if err != nil {
 		return ctx.Response().Json(http.StatusBadRequest, http.Json{
 			"message": err.Error(),
@@ -65,25 +80,25 @@ func (r *UserController) Login(ctx http.Context) http.Response {
 	var existingUser models.User
 	if err := facades.Orm().Query().Model(&existingUser).Where("username = ?", request.Username).First(&existingUser); err == nil {
 		if err != nil {
-			return ctx.Response().Json(http.StatusBadRequest,http.Json{
+			return ctx.Response().Json(http.StatusBadRequest, http.Json{
 				"message": err.Error(),
 			})
 		}
 		if facades.Hash().Check(request.Password, existingUser.Password) {
 			token, err := facades.Auth().Login(ctx, &existingUser)
 			if err != nil {
-				return ctx.Response().Json(http.StatusBadRequest,http.Json{
+				return ctx.Response().Json(http.StatusBadRequest, http.Json{
 					"message": err.Error(),
 				})
 			}
-			return ctx.Response().Json(http.StatusAccepted,http.Json{
+			return ctx.Response().Json(http.StatusAccepted, http.Json{
 				"message": "Username already exists",
 				"token":   token,
 				"user":    existingUser,
 			})
 		}
 	}
-	return ctx.Response().Json(http.StatusAccepted,http.Json{
+	return ctx.Response().Json(http.StatusAccepted, http.Json{
 		"message": "asdasd",
 	})
 }
